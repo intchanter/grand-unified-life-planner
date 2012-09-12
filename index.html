@@ -68,10 +68,28 @@ function gettime() {
 function addnew(x) {
 	currenttime = gettime();
 	if (x === "Tick"){
-		var addtemp = {"name":document.getElementById('Name').value, "desc":document.getElementById("Desc").value, "req":document.getElementById("Req").value, "loc":0, "end":document.getElementById("end").value, "perc":0, "decrement":document.getElementById("decrement").value, "stamp":currenttime/1000, "update":currenttime, "type":"Tick"};
+		var addtemp = {"name":document.getElementById('Name').value, 
+				"desc":document.getElementById("Desc").value, 
+				"req":document.getElementById("Req").value, 
+				"loc":0, 
+				"end":document.getElementById("end").value, 
+				"perc":0, 
+				"decrement":document.getElementById("decrement").value, 
+				"stamp":currenttime/1000, 
+				"update":currenttime, 	
+				"type":"Tick",
+				"category":document.getElementById("Category").value};
 	}
 	if (x === "CountDown"){
-		var addtemp = {"name":document.getElementById('Name').value, "desc":document.getElementById("Desc").value, "req":document.getElementById("Req").value, "scope":document.getElementById("Scope").value, "scopenum":document.getElementById("scopenum").value, "repeat":document.getElementById("repeat").checked, "stamp":currenttime/1000, "type":"CountDown"};
+		var addtemp = {"name":document.getElementById('Name').value, 
+				"desc":document.getElementById("Desc").value, 
+				"req":document.getElementById("Req").value, 
+				"scope":document.getElementById("Scope").value, 
+				"scopenum":document.getElementById("scopenum").value, 
+				"repeat":document.getElementById("repeat").checked, 
+				"stamp":currenttime/1000, 
+				"type":"CountDown",
+				"category":document.getElementById("Category").value};
 	}
 	if (local==undefined){
 		local=JSON.parse("["+JSON.stringify(addtemp)+"]");
