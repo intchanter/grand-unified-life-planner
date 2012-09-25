@@ -13,6 +13,7 @@ width:100%;
 height:30px;
 background-color:rgba(255,0,0,1);
 position:relative;
+/*border-radius:15px;*/
 }
 .progress{
 height:100%;
@@ -21,6 +22,7 @@ position:absolute;
 top:0;
 left:0;
 z-index:5;
+/*border-radius: 15px;*/
 }
 .timespan {
 font-size:10px;
@@ -35,7 +37,7 @@ color:rgba(0,0,0,1);
 font-weight:bold;
 position:absolute;
 top:0;
-left:2px;
+left:8px;
 z-index:10;
 }
 .complete {
@@ -57,9 +59,13 @@ background-color:transparent;
 }
 </style>
 <script type="text/javascript">
-var local;
-local = getjson();
-localStorage.WIP = JSON.stringify(local);
+server_JSON = getjson();
+
+if (server_JSON.freshness < localStorage.WIP.freshness){
+
+}
+
+localStorage.WIP = JSON.stringify(server_JSON);
 
 function gettime() {
 	var d = new Date();var currenttime=d.getTime();return currenttime;
@@ -71,14 +77,13 @@ function addnew(x) {
 		var addtemp = {"name":document.getElementById('Name').value, 
 				"desc":document.getElementById("Desc").value, 
 				"req":document.getElementById("Req").value, 
-				"loc":0, 
+				"loc":0,	
 				"end":document.getElementById("end").value, 
-				"perc":0, 
-				"decrement":document.getElementById("decrement").value, 
-				"stamp":currenttime/1000, 
-				"update":currenttime, 	
-				"type":"Tick",
-				"category":document.getElementById("Category").value};
+				"perc":0, "decrement":document.getElementById("decrement").value, 
+				"stamp":currenttime/1000,	
+				"update":currenttime, 
+				"type":"Tick", 
+				"category":document.getElementById("Cat").value};
 	}
 	if (x === "CountDown"){
 		var addtemp = {"name":document.getElementById('Name').value, 
@@ -89,11 +94,13 @@ function addnew(x) {
 				"repeat":document.getElementById("repeat").checked, 
 				"stamp":currenttime/1000, 
 				"type":"CountDown",
-				"category":document.getElementById("Category").value};
+				"category":document.getElementById("Cat").value};
 	}
-	if (local==undefined){
-		local=JSON.parse("["+JSON.stringify(addtemp)+"]");
-	localStorage.WIP=JSON.stringify(local);
+	if (local == undefined){
+		tempadd = "{" + addtemp.category + ":[" + JSON.stringify(addtemp)+"]}";
+		local = JSON.parse("{\"" + addtemp.category + "\":[" + JSON.stringify(addtemp)+"]}");
+		//local = JSON.parse("["+JSON.stringify(addtemp)+"]");
+		localStorage.WIP=JSON.stringify(local);
 	}
 	else {
 		var objg=local
@@ -348,7 +355,6 @@ local.sort(function(a, b){
  return 0
 })
 }
-//localStorage.WIP = JSON.stringify(mod);
 write();
 }
 
@@ -371,18 +377,15 @@ function getjson(){
 	xmlhttp.send();
 	x = xmlhttp.responseText;
 	return JSON.parse(xmlhttp.responseText);
-	//var jsondata=eval("("+xmlhttp.responseText+")");
-	//alert(jsondata.name);
 }
 
 function updateform(q) {
-	x = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></input></td><td><input type="text" id="Name"></td></tr><tr><td><label for="Desc3">Description (Optional):</label></input></td><td><input type="text" id="Desc"></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></td></tr><tr><td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td></tr><tr><td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td></tr></table></form>';
-	y = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></td></tr><tr><td>Requirements (Optional): </td><td><input type="text" id="Req"></td></tr><tr><td>How Many Times:<input type="number" id="end" size="3"></td><td>Backtrack:<input type="number" id="decrement" size="3"></td></tr><tr><td><div id="addmod"><button type="button" id="add" onClick="addnew(\'Tick\')">Add</button></div></td><td>&nbsp;</td></tr></table></form>';
+	x = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></input></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></input></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></input></td></tr><tr><td><label for="Cat">Category (Optional):</label></td><td><input type="text" id="Cat"></input></td></tr><tr><td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td></tr><tr><td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td></tr></table></form>';
+	y = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></td></tr><tr><td><label for="Cat">Category (Optional):</label></input></td><td><input type="text" id="Cat"></td></tr><tr><td>How Many Times:<input type="number" id="end" size="3"></td><td>Backtrack:<input type="number" id="decrement" size="3"></td></tr><tr><td><div id="addmod"><button type="button" id="add" onClick="addnew(\'Tick\')">Add</button></div></td><td>&nbsp;</td></tr></table></form>';
 		if (q === "CountDown"){document.getElementById("formadd").innerHTML = x;}
 		if (q === "Tick"){document.getElementById("formadd").innerHTML = y;}
 		if (q === ""){document.getElementById("formadd").innerHTML = "";}
 }
-window.onbeforeunload = putjson();
 </script>
 </head>
 
@@ -405,3 +408,29 @@ var int=self.setInterval("runeverysecond()",1000);
 
 </body>
 </html>
+<!--<form>
+<table width="100%">
+	<tr>
+		<td><label for="Name">Goal Name:</label></td>
+		<td><input type="text" id="Name"></input></td>
+	</tr>
+	<tr>
+		<td><label for="Desc">Description (Optional):</label></td>
+		<td><input type="text" id="Desc"></input></td>
+	</tr>
+	<tr>
+		<td><label for="Req">Requirements (Optional):</label></td>
+		<td><input type="text" id="Req"></input></td>
+	</tr>
+	<tr>
+		<td><label for="Cat">Category (Optional):</label></td>
+		<td><input type="text" id="Cat"></input></td>
+	</tr>
+	<tr>
+		<td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td>
+	</tr>
+	<tr>
+		<td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td>
+	</tr>
+</table>
+</form>-->

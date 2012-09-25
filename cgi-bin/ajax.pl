@@ -1,14 +1,32 @@
 #!/usr/bin/perl
-
-open FILE, ">/var/www/html/WIP/test.json" or die $!; 
 my $cgihttp = <>;
-print FILE $cgihttp; 
-my $jsonfile = <FILE>;
-  if ($cgihttp == $jsonfile) {
-    print "Content-type: text/plain", "\n";
-    print "Status: 204 No Response", "\n\n";
-  }
-  else {
 
-  }
-close FILE;
+sub writer {
+open WFILE, "> /var/www/html/WIP/test.json" or die $!; 
+print WFILE $cgihttp;
+close WFILE;
+}
+
+sub reader {
+open RFILE, "< /var/www/html/WIP/test.json" or die $!;
+$jsonfile = <RFILE>;
+close RFILE;
+}
+
+sub httpheader {
+	if ($cgihttp == $jsonfile) {
+		print "Content-type: text/plain", "\n";
+		print "Status: 204 No Response", "\n\n";
+	}
+}
+
+writer();
+reader();
+httpheader();
+
+until ($cgihttp == $jsonfile) {
+writer();
+reader();
+}
+
+httpheader();

@@ -1,0 +1,26 @@
+<form>
+<table width="100%">
+	<tr>
+		<td><label for="Name">Goal Name:</label></td>
+		<td><input type="text" id="Name"></input></td>
+	</tr>
+	<tr>
+		<td><label for="Desc">Description (Optional):</label></td>
+		<td><input type="text" id="Desc"></input></td>
+	</tr>
+	<tr>
+		<td><label for="Req">Requirements (Optional):</label></td>
+		<td><input type="text" id="Req"></input></td>
+	</tr>
+	<tr>
+		<td><label for="Cat">Category (Optional):</label></td>
+		<td><input type="text" id="Cat"></input></td>
+	</tr>
+	<tr>
+		<td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td>
+	</tr>
+	<tr>
+		<td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td>
+	</tr>
+</table>
+</form>
