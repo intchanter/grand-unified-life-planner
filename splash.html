@@ -33,10 +33,23 @@ background-color:grey;
         	<div>
 			<input id="Name" type="text" placeholder="Enter Goal/Reminder Name"></input><br>
 			<input id="Desc" type="text" placeholder="Enter Description (optional)"></input><br>
-			<input id="Req" type="text" placeholder="Enter the requirments for meeting this goal."></input>
-			<input id="number
-			</div>	
+			<input id="Req" type="text" placeholder="Enter the requirments for meeting this goal."></input><br>
+			<input type="text" id="Cat" placeholder="Enter a Category name."></input><br>
+			<select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><br>
+			<input type="number" id="scopenum" placeholder="Enter the number" size="3"></input><br>
+			<input type="checkbox" id="repeat"></input><br>
+		</div>	
 	</div>  
+	<div id="splash_tick_start">
+                <div>
+                        <input id="Name" type="text" placeholder="Enter Goal/Reminder Name"></input><br>
+                        <input id="Desc" type="text" placeholder="Enter Description (optional)"></input><br>
+                        <input id="Req" type="text" placeholder="Enter the requirments for meeting this goal."></input><br>
+			<input type="text" id="Cat" placeholder="Enter a Category name."></input><br>
+	                <input type="number" id="end" size="3"></input><br>
+			<input type="number" id="decrement" size="3"></input><br>
+		</div>
+	</div>
 </div>
 </body>
 </html>

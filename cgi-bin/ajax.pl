@@ -2,21 +2,25 @@
 my $cgihttp = <>;
 
 sub writer {
-open WFILE, "> /var/www/html/WIP/test.json" or die $!; 
+open WFILE, ">/var/www/WIP/test.json" or die $!; 
 print WFILE $cgihttp;
 close WFILE;
 }
 
 sub reader {
-open RFILE, "< /var/www/html/WIP/test.json" or die $!;
+open RFILE, "</var/www/WIP/test.json" or die $!;
 $jsonfile = <RFILE>;
 close RFILE;
 }
 
 sub httpheader {
 	if ($cgihttp == $jsonfile) {
-		print "Content-type: text/plain", "\n";
-		print "Status: 204 No Response", "\n\n";
+		print "Content-type: text/plain\n";
+		print "Status: 204 No Response\n\n";
+	}
+	else {
+                print "Content-type: text/plain\n";
+                print "Status: 204 No Response\n\n";
 	}
 }
 

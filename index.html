@@ -15,6 +15,17 @@ background-color:rgba(255,0,0,1);
 position:relative;
 /*border-radius:15px;*/
 }
+#selecttype{
+position:relative;
+height:30px;
+}
+#leftselect{
+position:absolute;
+}
+#rightselect{
+position:absolute;
+right:0px;
+}
 .progress{
 height:100%;
 background-color:rgba(0,255,0,1);
@@ -59,18 +70,38 @@ background-color:transparent;
 }
 </style>
 <script type="text/javascript">
-server_JSON = getjson();
-
-if (server_JSON.freshness < localStorage.WIP.freshness){
-
+/////////////////////////////////
+//Function used to update the  //
+//category selection drop-down //
+/////////////////////////////////
+function updateCatDropdown() {
+	var temp = "";
+	for (i in local.categories){
+		if (i == local.settings.workingcat){
+			temp = temp + "<option selected>"+i+"</option>";
+		}
+		else {
+		temp = temp + "<option>"+i+"</option>";
+		}
+	}
+	document.getElementById("selectcat").innerHTML = temp;
+//Will want to add the ability to hide the dropdown box when only using one category or when no data exists
 }
 
-localStorage.WIP = JSON.stringify(server_JSON);
-
+//////////////////////////////////
+//Function used to simply return//
+//the current UTC time stamp    //
+//////////////////////////////////
 function gettime() {
-	var d = new Date();var currenttime=d.getTime();return currenttime;
+	var d = new Date();
+	var currenttime=d.getTime();
+	return currenttime;
 }
 
+//////////////////////////////
+//Funciton used to add a new//
+//countdown or tick item.   //
+//////////////////////////////
 function addnew(x) {
 	currenttime = gettime();
 	if (x === "Tick"){
@@ -96,22 +127,28 @@ function addnew(x) {
 				"type":"CountDown",
 				"category":document.getElementById("Cat").value};
 	}
-	if (local == undefined){
-		tempadd = "{" + addtemp.category + ":[" + JSON.stringify(addtemp)+"]}";
-		local = JSON.parse("{\"" + addtemp.category + "\":[" + JSON.stringify(addtemp)+"]}");
-		//local = JSON.parse("["+JSON.stringify(addtemp)+"]");
-		localStorage.WIP=JSON.stringify(local);
+	if (addtemp.category == "") {
+		addtemp.category = "HomeCategory";
 	}
-	else {
-		var objg=local
-		var obja=addtemp;
-		objg.push(obja);
-		local = objg;
-		localStorage.WIP=JSON.stringify(local);
+	if (local.categories[addtemp.category] != undefined){
+		addtemp.category;
+                local.categories[addtemp.category].push(addtemp);
+                localStorage.WIP=JSON.stringify(local);
+                putjson();
+                write();
 	}
-	putjson();
-	write();
+	else if (local.categories[addtemp.category] == undefined){
+		local.categories[addtemp.category] = [];
+		local.categories[addtemp.category].push(addtemp);
+		localStorage.WIP=JSON.stringify(local);
+	        putjson();
+	        write();
+	}
+	else {alert("Something went wrong");}	
 	document.getElementById("formadd").innerHTML = "";
+	document.getElementById("selecttag").value = "";
+
+//if added something for a different category than currently viewing ask if user wants to switch to that category.
 }
 
 function truncate(n) {
@@ -119,36 +156,36 @@ function truncate(n) {
 }
 
 function runeverysecond() {
-	if (local!=undefined){
-		var len=local.length;
+	if (local.categories[workingcat] != undefined && pip == 0){//need to attach workingcat to a selectable widget from teh user.
+	var len=local.categories[workingcat].length;
 		for (i=0;i<len;i++){
 			var currenttime=gettime()/1000;
-				if (local[i].type==="CountDown") {
-				if (local[i].scope==="Seconds") {
-					x = currenttime - local[i].stamp;
-					f = local[i].scopenum - x;
+				if (local.categories[workingcat][i].type==="CountDown") {
+				if (local.categories[workingcat][i].scope==="Seconds") {
+					x = currenttime - local.categories[workingcat][i].stamp;
+					f = local.categories[workingcat][i].scopenum - x;
 					var abs = truncate(f);
 					document.getElementById("timespan"+i).innerHTML = abs+' seconds left'; 
 				}
-				else if (local[i].scope==="Minutes") {
-					x = (currenttime / 60) - (local[i].stamp / 60);
-					f = local[i].scopenum - x;
+				else if (local.categories[workingcat][i].scope==="Minutes") {
+					x = (currenttime / 60) - (local.categories[workingcat][i].stamp / 60);
+					f = local.categories[workingcat][i].scopenum - x;
 					var abs = truncate(f);
 					var dec = truncate((f - abs)*60);
 					document.getElementById("timespan"+i).innerHTML = abs+' minutes '+dec+' seconds'; 
 				}
-				else if (local[i].scope==="Hours") {
-					x = (currenttime / 3600) - (local[i].stamp / 3600);
-					f = local[i].scopenum - x;
+				else if (local.categories[workingcat][i].scope==="Hours") {
+					x = (currenttime / 3600) - (local.categories[workingcat][i].stamp / 3600);
+					f = local.categories[workingcat][i].scopenum - x;
 					var abs = truncate(f);
 					var dec = f - abs;
 					var min = truncate(dec * 60);
 					var sec = truncate(((dec * 60) - min) * 60);
 					document.getElementById("timespan"+i).innerHTML = abs+' hours  '+min+' minutes '+sec+' seconds'; 
 				}
-				else if (local[i].scope==="Days") {
-					x = (currenttime / 86400) - (local[i].stamp / 86400);
-					f = local[i].scopenum - x;
+				else if (local.categories[workingcat][i].scope==="Days") {
+					x = (currenttime / 86400) - (local.categories[workingcat][i].stamp / 86400);
+					f = local.categories[workingcat][i].scopenum - x;
 					var abs = truncate(f);
 					var dec = f - abs;
 					var hour = truncate(dec * 24);
@@ -156,9 +193,9 @@ function runeverysecond() {
 					var sec = truncate((((((dec * 24) - hour) * 60) - min) * 60));
 					document.getElementById("timespan"+i).innerHTML = abs+' days  '+hour+' hours  '+min+' minutes  '+sec+' seconds'; 
 				}
-				else if (local[i].scope==="Weeks") {
-					x = (currenttime / 604800) - (local[i].stamp / 604800);
-                        		f = local[i].scopenum - x;
+				else if (local.categories[workingcat][i].scope==="Weeks") {
+					x = (currenttime / 604800) - (local.categories[workingcat][i].stamp / 604800);
+                        		f = local.categories[workingcat][i].scopenum - x;
                         		var abs = truncate(f);
                         		var dec = f - abs;
                       			var day = truncate(dec * 7);
@@ -167,9 +204,9 @@ function runeverysecond() {
                         		var sec = truncate((((((((dec * 7) - day) * 24) - hour) * 60) - min) * 60));
 					document.getElementById("timespan"+i).innerHTML = abs+' weeks  '+day+' days  '+hour+' hours  '+min+' minutes '+sec+' seconds'; 
 				}
-				else if (local[i].scope==="Months") {
-					x = (currenttime / 2629743) - (local[i].stamp / 2629743);
-	                		f = local[i].scopenum - x;
+				else if (local.categories[workingcat][i].scope==="Months") {
+					x = (currenttime / 2629743) - (local.categories[workingcat][i].stamp / 2629743);
+	                		f = local.categories[workingcat][i].scopenum - x;
                         		var abs = truncate(f);
                         		var dec = f - abs;
                         		var day = truncate(dec * 30.42);
@@ -178,9 +215,9 @@ function runeverysecond() {
                         		var sec = truncate((((((((dec * 30.42) - day) * 24) - hour) * 60) - min) * 60));
 					document.getElementById("timespan"+i).innerHTML = abs+' months '+day+' days  '+hour+' hours  '+min+' minutes '+sec+' seconds'; 
 				}
-				else if (local[i].scope==="Years") {
-					x = (currenttime / 31556926) - (local[i].stamp / 31556926);
-                        		f = local[i].scopenum - x;
+				else if (local.categories[workingcat][i].scope==="Years") {
+					x = (currenttime / 31556926) - (local.categories[workingcat][i].stamp / 31556926);
+                        		f = local.categories[workingcat][i].scopenum - x;
                         		var abs = truncate(f);
                         		var dec = f - abs;
                         		var day = truncate(dec * 365);
@@ -189,23 +226,23 @@ function runeverysecond() {
                         		var sec = truncate((((((((dec * 365) - day) * 24) - hour) * 60) - min) * 60));
                         		document.getElementById("timespan"+i).innerHTML = abs+' years '+day+' days  '+hour+' hours  '+min+' minutes '+sec+' seconds';              
 				}
-			document.getElementById("progress"+i).style.width = ((local[i].scopenum-x)/(local[i].scopenum)*100)+'%';
+			document.getElementById("progress"+i).style.width = ((local.categories[workingcat][i].scopenum-x)/(local.categories[workingcat][i].scopenum)*100)+'%';
 			}
 		}
 	}
 }
 
 function complete(x) {
-	if (local[x].type === "Tick"){
-		local.splice(x,1);
+	if (local.categories[workingcat][x].type === "Tick"){
+		local.categories[workingcat].splice(x,1);
 	}
-	else if (local[x].type === "CountDown"){
-		if (local[x].repeat == false || local[x].repeat == undefined){
-			local.splice(x,1);
+	else if (local.categories[workingcat][x].type === "CountDown"){
+		if (local.categories[workingcat][x].repeat == false || local.categories[workingcat][x].repeat == undefined){
+			local.categories[workingcat].splice(x,1);
 		}
 	else {
 		var currenttime=gettime();
-		local[x].stamp = currenttime/1000;
+		local.categories[workingcat][x].stamp = currenttime/1000;
 	}
 	localStorage.WIP=JSON.stringify(local);
 	}
@@ -215,11 +252,11 @@ function complete(x) {
 }
 
 function remove(x) {
-	if (local[x].type === "Tick"){
-		local.splice(x,1);
+	if (local.categories[workingcat][x].type === "Tick"){
+		local.categories[workingcat].splice(x,1);
 	}
-	if (local[x].type === "CountDown"){
-		local.splice(x,1);
+	if (local.categories[workingcat][x].type === "CountDown"){
+		local.categories[workingcat].splice(x,1);
 		localStorage.WIP=JSON.stringify(local);
 	}
 	write();
@@ -227,93 +264,119 @@ function remove(x) {
 }
 
 function modify(x) {
-	if (local[x].type === "Tick"){
+	if (local.categories[workingcat][x].type == "Tick"){
 		updateform("Tick");
-		document.getElementById('Name').value = local[x].name;
-		document.getElementById("Desc").value = local[x].desc;
-		document.getElementById("Req").value = local[x].req;
-		document.getElementById('end').value = local[x].end;
-		document.getElementById("decrement").value = local[x].decrement;
+		document.getElementById('Name').value = local.categories[workingcat][x].name;
+		document.getElementById("Desc").value = local.categories[workingcat][x].desc;
+		document.getElementById("Req").value = local.categories[workingcat][x].req;
+		document.getElementById('end').value = local.categories[workingcat][x].end;
+		document.getElementById("decrement").value = local.categories[workingcat][x].decrement;
+		document.getElementById("Cat").value = local.categories[workingcat][x].category;
 		document.getElementById("addmod").innerHTML = '<button type="button" id="add" onClick="savemod('+x+')">Modify</button>'
 	}
-	if (local[x].type === "CountDown"){
+	if (local.categories[workingcat][x].type == "CountDown"){
 		updateform("CountDown");
-		document.getElementById('Name').value = local[x].name;
-		document.getElementById("Desc").value = local[x].desc;
-		document.getElementById("Req").value = local[x].req;
-		document.getElementById("Scope").value = local[x].scope;
-		document.getElementById("scopenum").value = local[x].scopenum;
-		document.getElementById("repeat").checked = local[x].repeat;
+		document.getElementById('Name').value = local.categories[workingcat][x].name;
+		document.getElementById("Desc").value = local.categories[workingcat][x].desc;
+		document.getElementById("Req").value = local.categories[workingcat][x].req;
+		document.getElementById("Scope").value = local.categories[workingcat][x].scope;
+		document.getElementById("scopenum").value = local.categories[workingcat][x].scopenum;
+		document.getElementById("repeat").checked = local.categories[workingcat][x].repeat;
+		document.getElementById("Cat").value = local.categories[workingcat][x].category;
 		document.getElementById("addmod").innerHTML = '<button type="button" id="add" onClick="savemod('+x+')">Modify</button>'
 	}
 }
 
 function savemod(x) {
-if (local[x].type === "Tick"){
-local[x].name = document.getElementById('Name').value;
-local[x].desc = document.getElementById("Desc").value;
-local[x].req = document.getElementById("Req").value;
-local[x].end = document.getElementById('end').value;
-local[x].decrement = document.getElementById("decrement").value;
-localStorage.WIP = JSON.stringify(local);
-document.getElementById("addmod").innerHTML = '<button type="button" id="add" onClick="addnew()">Add</button>'
-}
-if (local[x].type === "CountDown") {
-local[x].name = document.getElementById('Name').value;
-local[x].desc = document.getElementById("Desc").value;
-local[x].req = document.getElementById("Req").value;
-local[x].scope = document.getElementById("Scope").value;
-local[x].scopenum = document.getElementById("scopenum").value;
-local[x].repeat = document.getElementById("repeat").checked;
-localStorage.WIP = JSON.stringify(local);
-document.getElementById("addmod").innerHTML = '<button type="button" id="add" onClick="addnew()">Add</button>'
-}
+	if (local.categories[workingcat][x].type == "Tick"){
+		local.categories[workingcat][x].name = document.getElementById('Name').value;
+		local.categories[workingcat][x].desc = document.getElementById('Desc').value;
+		local.categories[workingcat][x].req = document.getElementById('Req').value;
+		local.categories[workingcat][x].end = document.getElementById('end').value;
+		local.categories[workingcat][x].decrement = document.getElementById('decrement').value;
+		local.categories[workingcat][x].category = document.getElementById('Cat').value;
+		localStorage.WIP = JSON.stringify(local);
+		document.getElementById('addmod').innerHTML = '<button type="button" id="add" onClick="addnew()">Add</button>'
+	}
+	if (local.categories[workingcat][x].type == "CountDown") {
+		local.categories[workingcat][x].name = document.getElementById('Name').value;
+		local.categories[workingcat][x].desc = document.getElementById('Desc').value;
+		local.categories[workingcat][x].req = document.getElementById('Req').value;
+		local.categories[workingcat][x].scope = document.getElementById('Scope').value;
+		local.categories[workingcat][x].scopenum = document.getElementById('scopenum').value;
+		local.categories[workingcat][x].repeat = document.getElementById('repeat').checked;
+		local.categories[workingcat][x].category = document.getElementById('Cat').value;
+		localStorage.WIP = JSON.stringify(local);
+		document.getElementById('addmod').innerHTML = '<button type="button" id="add" onClick="addnew()">Add</button>'
+	}
+	// Needing to check if cat exists if not exist. then create category before running the below code. if (){ }
+	if (workingcat != document.getElementById('Cat').value){
+	tempEndOfIndex = x + 1;
+	progressSlice = local.categories[workingcat].slice(x,tempEndOfIndex);
+	progressSlice = progressSlice[0]; //used to get rid of the [] array in the object
+	local.categories[workingcat].splice(x,1);
+		if (local.categories[workingcat].length == 0){
+			delete local.categories[workingcat];
+		}
+	workingcat = document.getElementById('Cat').value;
+	local.categories[workingcat].push(progressSlice);
+	}
+
 updateform("");
 document.getElementById("selecttag").value = "";
+updateCatDropdown();
 putjson();
 write();
 }
 
 function write() {
-if (local!=undefined){
-var len=local.length;
-var htmlarray="";
-for (i=0;i<len;i++)
-{
-if (local[i].type === "Tick") {
-var pos = '('+local[i].loc+'/'+local[i].end+')';
-htmlarray = htmlarray+'<div id="progressc'+i+'" class="progressc"><div id="titlespan'+i+'" class="title">'+local[i].name+' '+pos+'</div><div id="progress'+i+'" class="progress" style="width:'+local[i].perc+'%"></div><button id="complete'+i+'" class="complete" onClick="complete('+i+');"><img src="complete.png" height="20px" width="20px"></img></button><div id="timespan'+i+'" class="timespan">'+local[i].update+'</div></div><div id="icondiv'+i+'"><img src="remove.png" height="25px" width="25px" onClick="remove('+i+');"></img>&nbsp;<img src="modify.png" height="25px" width="25px" onClick="modify('+i+');"></image>&nbsp;<img src="thumbu.png" height="25px" width="25px" onClick="Thumbup('+i+');"></img>&nbsp;<img src="thumbd.png" height="25px" width="25px" onClick="Thumbdown('+i+');"></img></div>'; 
+	if (local.settings.workingcat != undefined && local.categories[workingcat] != undefined){
+		var len=local.categories[workingcat].length;
+		var htmlarray="";
+		for (i=0;i<len;i++){
+			if (local.categories[workingcat][i].type === "Tick") {
+			var pos = '('+local.categories[workingcat][i].loc+'/'+local.categories[workingcat][i].end+')';
+			htmlarray = htmlarray+'<div id="progressc'+i+'" class="progressc"><div id="titlespan'+i+'" class="title">'+local.categories[workingcat][i].name+' '+pos+'</div><div id="progress'+i+'" class="progress" style="width:'+local.categories[workingcat][i].perc+'%"></div><button id="complete'+i+'" class="complete" onClick="complete('+i+');"><img src="complete.png" height="20px" width="20px"></img></button><div id="timespan'+i+'" class="timespan">'+local.categories[workingcat][i].update+'</div></div><div id="icondiv'+i+'"><img src="remove.png" height="25px" width="25px" onClick="remove('+i+');"></img>&nbsp;<img src="modify.png" height="25px" width="25px" onClick="modify('+i+');"></image>&nbsp;<img src="thumbu.png" height="25px" width="25px" onClick="Thumbup('+i+');"></img>&nbsp;<img src="thumbd.png" height="25px" width="25px" onClick="Thumbdown('+i+');"></img></div>'; 
+			}
+			if (local.categories[workingcat][i].type === "CountDown") {
+			htmlarray = htmlarray+'<div id="progressc'+i+'" class="progressc"><div id="titlespan'+i+'" class="title">'+local.categories[workingcat][i].name+'</div><div id="progress'+i+'" class="progress" style="width:0%"></div><button id="complete'+i+'" class="complete" onClick="complete('+i+');"><img src="complete.png" height="20px" width="20px"></img></button><div id="timespan'+i+'" class="timespan"></div></div><div id="icondiv'+i+'"><img src="remove.png" height="25px" width="25px" onClick="remove('+i+');"></img>&nbsp;<img src="modify.png" height="25px" width="25px" onClick="modify('+i+');"></img></div>'; 
+			}
+		}
+	document.getElementById("bar").innerHTML=htmlarray;
+	updateCatDropdown();
+	}
 }
-if (local[i].type === "CountDown") {
-htmlarray = htmlarray+'<div id="progressc'+i+'" class="progressc"><div id="titlespan'+i+'" class="title">'+local[i].name+'</div><div id="progress'+i+'" class="progress" style="width:0%"></div><button id="complete'+i+'" class="complete" onClick="complete('+i+');"><img src="complete.png" height="20px" width="20px"></img></button><div id="timespan'+i+'" class="timespan"></div></div><div id="icondiv'+i+'"><img src="remove.png" height="25px" width="25px" onClick="remove('+i+');"></img>&nbsp;<img src="modify.png" height="25px" width="25px" onClick="modify('+i+');"></img></div>'; 
-}
-}
-document.getElementById("bar").innerHTML=htmlarray;
-}
+
+function updateform(q) {
+	x = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></input></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></input></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></input></td></tr><tr><td><label for="Cat">Category (Optional):</label></td><td><input type="text" id="Cat"></input></td></tr><tr><td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td></tr><tr><td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td></tr></table></form>';
+	y = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></td></tr><tr><td><label for="Cat">Category (Optional):</label></input></td><td><input type="text" id="Cat"></td></tr><tr><td>How Many Times:<input type="number" id="end" size="3"></td><td>Backtrack:<input type="number" id="decrement" size="3"></td></tr><tr><td><div id="addmod"><button type="button" id="add" onClick="addnew(\'Tick\')">Add</button></div></td><td>&nbsp;</td></tr></table></form>';
+		if (q === "CountDown"){document.getElementById("formadd").innerHTML = x;}
+		if (q === "Tick"){document.getElementById("formadd").innerHTML = y;}
+		if (q === ""){document.getElementById("formadd").innerHTML = "";}
 }
 
 function Thumbup(x) {
-local[x].loc = local[x].loc + 1;
-local[x].perc = (local[x].loc  / local[x].end) * 100;
-if (local[x].loc < 0) {local[x].perc = 0;}
+local.categories[workingcat][x].loc = local.categories[workingcat][x].loc + 1;
+local.categories[workingcat][x].perc = (local.categories[workingcat][x].loc  / local.categories[workingcat][x].end) * 100;
+if (local.categories[workingcat][x].loc < 0) {local.categories[workingcat][x].perc = 0;}
 var d = new Date();
-local[x].update = d.toLocaleString();
+local.categories[workingcat][x].update = d.toLocaleString();
 write();
 putjson();
 }
 
 function Thumbdown(x) {
 var d = new Date();
-local[x].update = d.toLocaleString();
-if (local[x].decrement == 0){
-local[x].loc = 0;
-local[x].perc= 0;
+local.categories[workingcat][x].update = d.toLocaleString();
+if (local.categories[workingcat][x].decrement == 0){
+local.categories[workingcat][x].loc = 0;
+local.categories[workingcat][x].perc= 0;
 }
 else {
-local[x].loc = local[x].loc - local[x].decrement;
-local[x].perc = (local[x].loc / local[x].end) * 100;
-local[x].update = d.toLocaleString();
-if (local[x].loc < 0) {local[x].perc = 0;}
+local.categories[workingcat][x].loc = local.categories[workingcat][x].loc - local.categories[workingcat][x].decrement;
+local.categories[workingcat][x].perc = (local.categories[workingcat][x].loc / local.categories[workingcat][x].end) * 100;
+local.categories[workingcat][x].update = d.toLocaleString();
+if (local.categories[workingcat][x].loc < 0) {local.categories[workingcat][x].perc = 0;}
 }
 write();
 putjson();
@@ -325,7 +388,7 @@ putjson();
 
 function sorty(x){
 if (x == "AA"){
-local.sort(function(a, b){
+local.categories[workingcat].sort(function(a, b){
  var nameA=a.name.toLowerCase(), nameB=b.name.toLowerCase();
  if (nameA < nameB) //sort string ascending
   return -1 
@@ -335,7 +398,7 @@ local.sort(function(a, b){
 })
 }
 if (x == "AD"){
-local.sort(function(a, b){
+local.categories[workingcat].sort(function(a, b){
  var nameA=a.name.toLowerCase(), nameB=b.name.toLowerCase();
  if (nameB < nameA) //sort string ascending
   return -1 
@@ -345,7 +408,7 @@ local.sort(function(a, b){
 })
 }
 if (x == "TYPE"){
-local.sort(function(a, b){
+local.categories[workingcat].sort(function(a, b){
   var nameA=a.type.toLowerCase(), nameB=b.type.toLowerCase();
  console.log(nameA + nameB);
  if (nameA < nameB)
@@ -375,23 +438,26 @@ function getjson(){
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.open("GET","test.json",false);
 	xmlhttp.send();
-	x = xmlhttp.responseText;
 	return JSON.parse(xmlhttp.responseText);
 }
 
-function updateform(q) {
-	x = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></input></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></input></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></input></td></tr><tr><td><label for="Cat">Category (Optional):</label></td><td><input type="text" id="Cat"></input></td></tr><tr><td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td></tr><tr><td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td></tr></table></form>';
-	y = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></td></tr><tr><td><label for="Cat">Category (Optional):</label></input></td><td><input type="text" id="Cat"></td></tr><tr><td>How Many Times:<input type="number" id="end" size="3"></td><td>Backtrack:<input type="number" id="decrement" size="3"></td></tr><tr><td><div id="addmod"><button type="button" id="add" onClick="addnew(\'Tick\')">Add</button></div></td><td>&nbsp;</td></tr></table></form>';
-		if (q === "CountDown"){document.getElementById("formadd").innerHTML = x;}
-		if (q === "Tick"){document.getElementById("formadd").innerHTML = y;}
-		if (q === ""){document.getElementById("formadd").innerHTML = "";}
+function pippy(){
+local.settings.workingcat = document.getElementById('selectcat').value;
+workingcat = local.settings.workingcat;
+putjson(); 
+write(); 
 }
 </script>
 </head>
 
-<body onload="write();">
+<body>
 <div id="selecttype">
-<select id="selecttag" onchange="q = document.getElementById('selecttag').value; updateform(q);"><option></option><option>CountDown</option><option>Tick</option></select>
+	<div id="leftselect">
+	<select id="selecttag" onchange="q = document.getElementById('selecttag').value; updateform(q);"><option></option><option>CountDown</option><option>Tick</option></select>
+	</div>
+	<div id="rightselect">
+	<select id="selectcat" onchange="pippy();"></select>
+	</div>
 </div>
 
 <div id="formadd">
@@ -402,35 +468,71 @@ function updateform(q) {
 </div>
 
 <script type="text/javascript">
+//GRP1/////////////////////////////////////////////
+//Set two variables that will aid the logic below//
+///////////////////////////////////////////////////
+var server_JSON = getjson();
+var pip = 0;
+if (localStorage.getItem("WIP") != null) {var jsonParseLS = JSON.parse(localStorage.WIP);}
+//GRP2////////////////////////////////////////
+//Logic to determine what takes precedence  //
+//localStorage  vs Server vs the working var//
+//////////////////////////////////////////////
+if (server_JSON.freshness == undefined && localStorage.getItem("WIP") == null){
+        var local = {"freshness" : gettime(),
+                "settings" : {"workingcat" : "HomeCategory"},
+                "categories" : {}, 
+                "security" : {}
+		};
+	var workingcat = "HomeCategory";
+	putjson();
+	localStorage.WIP = JSON.stringify(local);
+	server_JSON = local;
+	updateCatDropdown();
+	write();
+}
+else if (server_JSON.freshness == undefined && localStorage.getItem("WIP") != null) {
+	var local = JSON.parse(localStorage.WIP);
+	var workingcat = local.settings.workingcat;
+	server_JSON = JSON.parse(localStorage.WIP);
+	putjson();
+	updateCatDropdown();
+	write();
+}
+else if (server_JSON.freshness != undefined && localStorage.WIP == undefined) {
+	var local = server_JSON;
+	var workingcat = local.settings.workingcat;
+	localStorage.WIP = JSON.stringify(server_JSON);
+	updateCatDropdown();
+	write();
+}
+else if (server_JSON.freshness < jsonParseLS.freshness){
+	var local = jsonParseLS;
+	var workingcat = local.settings.workingcat;
+	server_JSON = jsonParseLS;
+	putjson();	
+	updateCatDropdown();	
+	write();
+}
+else if (server_JSON.freshness > jsonParseLS.freshness){
+	var local = server_JSON;
+	var workingcat = local.settings.workingcat;
+	localStorage.WIP = server_JSON;
+	updateCatDropdown()
+	write();
+}
+else if (server_JSON.freshness == jsonParseLS.freshness){
+	var local = server_JSON;
+	var workingcat = local.settings.workingcat;
+	updateCatDropdown();
+	write();
+}
+else {alert("you have defied logic");}
+
+</script>
+<script type="text/javascript">
 //run the calculations for the progress bar draw each 1000 milliseconds. 
 var int=self.setInterval("runeverysecond()",1000);
 </script>
-
 </body>
 </html>
-<!--<form>
-<table width="100%">
-	<tr>
-		<td><label for="Name">Goal Name:</label></td>
-		<td><input type="text" id="Name"></input></td>
-	</tr>
-	<tr>
-		<td><label for="Desc">Description (Optional):</label></td>
-		<td><input type="text" id="Desc"></input></td>
-	</tr>
-	<tr>
-		<td><label for="Req">Requirements (Optional):</label></td>
-		<td><input type="text" id="Req"></input></td>
-	</tr>
-	<tr>
-		<td><label for="Cat">Category (Optional):</label></td>
-		<td><input type="text" id="Cat"></input></td>
-	</tr>
-	<tr>
-		<td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td>
-	</tr>
-	<tr>
-		<td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td>
-	</tr>
-</table>
-</form>-->
