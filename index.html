@@ -33,6 +33,8 @@ position:absolute;
 top:0;
 left:0;
 z-index:5;
+background-image:url('barfg.png');
+background-repeat:repeat-x;
 /*border-radius: 15px;*/
 }
 .timespan {
@@ -69,13 +71,17 @@ width:25px;
 background-color:transparent;
 }
 </style>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/jquery-ui.min.js"></script>
 <script type="text/javascript">
 /////////////////////////////////
 //Function used to update the  //
 //category selection drop-down //
 /////////////////////////////////
+'use strict';
 function updateCatDropdown() {
 	var temp = "";
+	var i;
 	for (i in local.categories){
 		if (i == local.settings.workingcat){
 			temp = temp + "<option selected>"+i+"</option>";
@@ -103,7 +109,7 @@ function gettime() {
 //countdown or tick item.   //
 //////////////////////////////
 function addnew(x) {
-	currenttime = gettime();
+	var currenttime = gettime();
 	if (x === "Tick"){
 		var addtemp = {"name":document.getElementById('Name').value, 
 				"desc":document.getElementById("Desc").value, 
@@ -158,6 +164,9 @@ function truncate(n) {
 function runeverysecond() {
 	if (local.categories[workingcat] != undefined && pip == 0){//need to attach workingcat to a selectable widget from teh user.
 	var len=local.categories[workingcat].length;
+	var i;
+	var x;
+	var f;
 		for (i=0;i<len;i++){
 			var currenttime=gettime()/1000;
 				if (local.categories[workingcat][i].type==="CountDown") {
@@ -255,7 +264,7 @@ function remove(x) {
 	if (local.categories[workingcat][x].type === "Tick"){
 		local.categories[workingcat].splice(x,1);
 	}
-	if (local.categories[workingcat][x].type === "CountDown"){
+	else if (local.categories[workingcat][x].type === "CountDown"){
 		local.categories[workingcat].splice(x,1);
 		localStorage.WIP=JSON.stringify(local);
 	}
@@ -309,10 +318,12 @@ function savemod(x) {
 		localStorage.WIP = JSON.stringify(local);
 		document.getElementById('addmod').innerHTML = '<button type="button" id="add" onClick="addnew()">Add</button>'
 	}
-	// Needing to check if cat exists if not exist. then create category before running the below code. if (){ }
+	if (local.categories[document.getElementById('Cat').value] == undefined){// Needing to check if cat exists if not exist. then create category before running the below code. if (){ }
+		local.categories[document.getElementById('Cat').value] = [];
+	}
 	if (workingcat != document.getElementById('Cat').value){
-	tempEndOfIndex = x + 1;
-	progressSlice = local.categories[workingcat].slice(x,tempEndOfIndex);
+	var tempEndOfIndex = x + 1;
+	var progressSlice = local.categories[workingcat].slice(x,tempEndOfIndex);
 	progressSlice = progressSlice[0]; //used to get rid of the [] array in the object
 	local.categories[workingcat].splice(x,1);
 		if (local.categories[workingcat].length == 0){
@@ -333,6 +344,7 @@ function write() {
 	if (local.settings.workingcat != undefined && local.categories[workingcat] != undefined){
 		var len=local.categories[workingcat].length;
 		var htmlarray="";
+		var i;
 		for (i=0;i<len;i++){
 			if (local.categories[workingcat][i].type === "Tick") {
 			var pos = '('+local.categories[workingcat][i].loc+'/'+local.categories[workingcat][i].end+')';
@@ -348,6 +360,8 @@ function write() {
 }
 
 function updateform(q) {
+	var x;
+	var y;
 	x = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></input></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></input></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></input></td></tr><tr><td><label for="Cat">Category (Optional):</label></td><td><input type="text" id="Cat"></input></td></tr><tr><td colspan="2"><label for="Scope">Select your Scope:</label><select name="Scope" id="Scope"><option>Seconds</option><option>Minutes</option><option>Hours</option><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select><label for="scopenum">How Much?</label><input type="number" id="scopenum" size="3"></input><label for="repeat">Repeat Continuously</label><input type="checkbox" id="repeat"></input></td></tr><tr><td colspan="2"><div id="addmod"><button type="button" id="add" onClick="addnew(\'CountDown\')">Add</button></div></td></tr></table></form>';
 	y = '<form><table width="100%"><tr><td><label for="Name">Goal Name:</label></td><td><input type="text" id="Name"></td></tr><tr><td><label for="Desc">Description (Optional):</label></td><td><input type="text" id="Desc"></td></tr><tr><td><label for="Req">Requirements (Optional):</label></td><td><input type="text" id="Req"></td></tr><tr><td><label for="Cat">Category (Optional):</label></input></td><td><input type="text" id="Cat"></td></tr><tr><td>How Many Times:<input type="number" id="end" size="3"></td><td>Backtrack:<input type="number" id="decrement" size="3"></td></tr><tr><td><div id="addmod"><button type="button" id="add" onClick="addnew(\'Tick\')">Add</button></div></td><td>&nbsp;</td></tr></table></form>';
 		if (q === "CountDown"){document.getElementById("formadd").innerHTML = x;}
@@ -427,7 +441,7 @@ write();
 //////////////////
 
 function putjson(){
-	send = JSON.stringify(local);
+	var send = JSON.stringify(local);
 	var xmlhttp = new XMLHttpRequest();
 	xmlhttp.open("POST","cgi-bin/ajax.pl",true);
 	xmlhttp.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
@@ -435,7 +449,7 @@ function putjson(){
 }
 
 function getjson(){
-	xmlhttp=new XMLHttpRequest();
+	var xmlhttp=new XMLHttpRequest();
 	xmlhttp.open("GET","test.json",false);
 	xmlhttp.send();
 	return JSON.parse(xmlhttp.responseText);
